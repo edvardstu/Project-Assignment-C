@@ -21,6 +21,8 @@ void sunflower(double x[], double y[], int n_particles, int alpha, double R);
 
 double radius(int index, int n_particles, int n_boundary, double R);
 
+double walltime();
+
 
 
 #endif

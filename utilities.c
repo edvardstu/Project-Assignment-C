@@ -73,3 +73,9 @@ double radius(int index, int n_particles, int n_boundary, double R){
         return R*sqrt((double)index-0.5)/sqrt((double)n_particles-(double)(n_boundary-1)/2);
     }
 }
+
+double walltime(){
+	static struct timeval t;
+	gettimeofday ( &t, NULL );
+	return ( t.tv_sec + 1e-6 * t.tv_usec );
+}
