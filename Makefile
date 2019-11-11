@@ -3,14 +3,14 @@
 CC=gcc
 FLAGS := -O3
 LINKING := -lblas -fopenmp -lgsl -lgslcblas -lm
-DEPS = utilities.h
-OBJ = main.o utilities.o
+DEPS = utilities.h interactions.h
+OBJ = main.o utilities.o interactions.o
 
 
 .PHONY: run clean
 
 %.o: %.c $(DEPS)
-	$(CC) $(FLAGS) -c $< -o $@ 
+	$(CC) $(FLAGS) -c $< -o $@
 
 main: $(OBJ)
 	$(CC) $(FLAGS) -o $@ $^ $(LINKING)
