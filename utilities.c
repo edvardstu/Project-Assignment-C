@@ -99,7 +99,7 @@ const char* restrict createFileName(const char* restrict fileNameBase, bool over
         while (fileExists){
             if( access( fileName, F_OK ) != -1 ) {
                 if (fileNumber==0){
-                    printf("Filename: '%s' already exsisted, and a numeral was added\n ", fileName);
+                    printf("Filename: '%s' already exsisted, and a numeral was added\n", fileName);
                 }
                 fileNumber++;
                 str_builder_clear(sb);
