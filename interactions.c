@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "interactions.h"
+
 //In all the following functions it is assumed that the particles are all ready within range of the potentials
 //This is to improve computational time
 

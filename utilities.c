@@ -5,8 +5,11 @@
 #include <string.h>
 #include <gsl/gsl_rng.h>
 #include <sys/time.h>
+#include <unistd.h>
+#include <stdbool.h>
 
 #include "utilities.h"
+#include "str_builder.h"
 
 void testFunc(){
     printf("Hello World");
@@ -78,4 +81,41 @@ double walltime(){
 	static struct timeval t;
 	gettimeofday ( &t, NULL );
 	return ( t.tv_sec + 1e-6 * t.tv_usec );
+}
+
+const char* restrict createFileName(const char* restrict fileNameBase, bool overwrite){
+    const char * restrict fileName;
+    const char * TXT = ".txt";
+    bool fileExists = true;
+    int fileNumber = 0;
+
+    str_builder_t *sb;
+    sb = str_builder_create();
+    str_builder_add_str(sb, fileNameBase, 0);
+    str_builder_add_str(sb, TXT, 0);
+
+    if (!overwrite){
+        fileName = str_builder_peek(sb);
+        while (fileExists){
+            if( access( fileName, F_OK ) != -1 ) {
+                if (fileNumber==0){
+                    printf("Filename: '%s' already exsisted, and a numeral was added\n ", fileName);
+                }
+                fileNumber++;
+                str_builder_clear(sb);
+                str_builder_add_str(sb, fileNameBase, 0);
+                str_builder_add_int(sb,fileNumber);
+                str_builder_add_str(sb, TXT, 0);
+                fileName = str_builder_peek(sb);
+            } else {
+                fileExists = false;
+            }
+
+        }
+    }
+
+    fileName = str_builder_dump(sb, NULL);
+    str_builder_destroy(sb);
+
+    return fileName;
 }

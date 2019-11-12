@@ -5,15 +5,18 @@
 #include <string.h>
 #include <gsl/gsl_rng.h>
 #include <sys/time.h>
+#include <omp.h>
+#include <stdbool.h>
 
 #include "utilities.h"
 #include "interactions.h"
 
-#define R 35.0
-#define R_PARTICLE 1.0
 
-#define N_PARTICLES 1000
-#define N_STEPS 60000
+#define R 17.0
+#define R_PARTICLE 0.5
+
+#define N_PARTICLES 10
+#define N_STEPS 600
 #define U_0 20.0
 #define D_R 10.0
 #define DT 0.0002
@@ -23,7 +26,7 @@
 #define GAMMA_R 1
 
 //Boundary interatction
-#define LAMBDA_HAR 20 //FS
+#define LAMBDA_HAR 200 //FS
 #define KAPPA_HAR 2  //GS
 
 //Particle particle interaction
@@ -44,6 +47,8 @@ int main(int argc, char **argv) {
         printf("Too many particles\n");
         printf("Maximum number of particles is %d\n", max_p);
         exit(-1);
+    } else {
+        printf("The system occupancy is %f\n", (double)N_PARTICLES/max_p);
     }
 
 
@@ -51,11 +56,22 @@ int main(int argc, char **argv) {
     FILE *fp;
     double x[N_PARTICLES], y[N_PARTICLES], theta[N_PARTICLES];
     double fs_scale;
+    //Loop parameters
     unsigned int t, index_p, index_n, i;
-    const char * restrict fileName = "data.txt";
+    //Parameters for boundary
+    double r_coord, fx_b, fy_b, torque_b;
+    //Parameters for particle particle interaction
+    double delta_x, delta_y, temp_fx_n, temp_fy_n, temp_torque_n, r_pn_2;
+
+    const char * restrict fileNameBase = "results/data";
+    const bool overwrite = false;
+    const char * restrict fileName;
+
     ///////////////////////////////////////////////////////////////////
 
+
     ///////////////////Opening file for results ///////////////////////
+    fileName = createFileName(fileNameBase, overwrite);
     openFile(fileName, &fp);
     //fp = fopen(fileName, "w");
     ///////////////////////////////////////////////////////////////////
@@ -80,10 +96,15 @@ int main(int argc, char **argv) {
         if (t <= 50000){
           fs_scale=0.01+t*0.99/50000.0;
         }
+
+        double fx_n[N_PARTICLES] = {0};
+        double fy_n[N_PARTICLES] = {0};
+        double torque_n[N_PARTICLES] = {0};
+        double number_n[N_PARTICLES] = {0};
+
         for (index_p = 0; index_p < N_PARTICLES; index_p++){
             //Find forces and torque from wall
             //Assume circular potentail has a centre in (0,0)
-            double r_coord, fx_b, fy_b, torque_b; //Could be moved out of scoope depending on OpenMP
             fx_b = 0;
             fy_b = 0;
             torque_b = 0;
@@ -93,12 +114,6 @@ int main(int argc, char **argv) {
                 torqueHarmonicCircular(&torque_b, r_coord, x[index_p], y[index_p], theta[index_p], LAMBDA_HAR, KAPPA_HAR);
             }
 
-            double fx_n[N_PARTICLES] = {0};
-            double fy_n[N_PARTICLES] = {0};
-            double torque_n[N_PARTICLES] = {0};
-            double number_n[N_PARTICLES] = {0};
-            double r_pn_2; //radius between particle and neighbour squared
-            double delta_x, delta_y, temp_fx_n, temp_fy_n, temp_torque_n;
             for (index_n = index_p + 1; index_n < N_PARTICLES; index_n++){
                 delta_x = x[index_p]-x[index_n];
                 delta_y = y[index_p]-y[index_n];

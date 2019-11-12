@@ -23,6 +23,8 @@ double radius(int index, int n_particles, int n_boundary, double R);
 
 double walltime();
 
+const char* restrict createFileName(const char* restrict fileNameBase, bool overwrite);
+
 
 
 #endif
