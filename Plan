@@ -1,0 +1,24 @@
+Implementer AB
+
+Sjekk euler mot seg selv med forskjellige tidssteg. r_i mot r_i
+
+Plot r_AB og r_E med støy og samme tidssteg
+Skriv om dette for å vise at programmet funker
+
+Plot r_AB og r_E med forskjellige tidssteg uten støy.
+
+1. Kalibrer. 100 partikler, finn riktig tidssteg. Få partiklenee til å gjøre noen runder i innhegningen
+Delta t må bestemmes for å gitt T_tot. Finne baseline delta t for euler 0.1% forskjell på to delta t
+
+2. Sjekk AB mot Euler. Øk delta t til AB og se hvor lenge den er nøyaktig
+
+3. Sjekk AB og Euler med støy også
+
+
+
+Videre, forsøke å lage en uniform virvel. Prøve å lage en veske
+Endre til et mykere potenisal
+Prøve harmonisk protensial 1/2k*(r-D)²
+Prøve V=1/r², cutoff på cirka 10.
+1000 partikler
+Velg potensialets rekkevidde og størrelse på sirkle slik at dreiemomentet fungerer mellom nærmeste naboer når det er likevekt mellom partikler tett pakket  

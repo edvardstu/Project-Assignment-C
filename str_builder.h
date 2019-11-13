@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+//https://nachtimwald.com/2017/02/26/efficient-c-string-builder/
+
 /*! addtogroup str_builder String Builder
  *
  * A mutable string of characters used to dynamically build a string.

@@ -1,0 +1,23 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	0	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+R	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define R /;"	macro	line:15	file:
+R_PARTICLE	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define R_PARTICLE /;"	macro	line:16	file:
+N_PARTICLES	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define N_PARTICLES /;"	macro	line:18	file:
+N_STEPS	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define N_STEPS /;"	macro	line:19	file:
+U_0	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define U_0 /;"	macro	line:20	file:
+D_R	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define D_R /;"	macro	line:21	file:
+DT	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define DT /;"	macro	line:22	file:
+GAMMA_T	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define GAMMA_T /;"	macro	line:25	file:
+GAMMA_R	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define GAMMA_R /;"	macro	line:26	file:
+LAMBDA_HAR	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define LAMBDA_HAR /;"	macro	line:29	file:
+KAPPA_HAR	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define KAPPA_HAR /;"	macro	line:30	file:
+GAMMA_PP	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define GAMMA_PP /;"	macro	line:33	file:
+R_CUT_OFF_TORQUE_2	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define R_CUT_OFF_TORQUE_2 /;"	macro	line:34	file:
+LAMBDA_PP	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define LAMBDA_PP /;"	macro	line:35	file:
+R_CUT_OFF_FORCE	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^#define R_CUT_OFF_FORCE /;"	macro	line:36	file:
+a	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^const double a = sqrt(3);$/;"	variable	line:39
+main	/home/edvardst/Documents/NTNU/Programming/Project_Assignment/Project_Assignment_c/main.c	/^int main(int argc, char **argv) {$/;"	function	line:43	signature:(int argc, char **argv)

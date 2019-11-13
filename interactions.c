@@ -22,8 +22,15 @@ void torqueHarmonicCircular(double *torque_b, double r_coord, double x, double y
 }
 
 void forceWeeksChandlerAndersen(double *fx_n, double *fy_n, double r_pn_2, double delta_x, double delta_y){
+    //Here it is assumed that sigma=1/2^(1/6) which gives a particle radius of 1
     double r_pn_6 = r_pn_2*r_pn_2*r_pn_2;
     double f = 12*(1.0/r_pn_6-1.0)/(r_pn_6*r_pn_2);
+    *fx_n = f*delta_x;
+    *fy_n = f*delta_y;
+}
+
+void forceHarmonicPP(double *fx_n, double *fy_n, double r_pn_2, double delta_x, double delta_y, double r_cut_off_force, double lambda_pp){
+    double f = -lambda_pp*(sqrt(r_pn_2)-r_cut_off_force);
     *fx_n = f*delta_x;
     *fy_n = f*delta_y;
 }

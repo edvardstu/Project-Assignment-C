@@ -15,10 +15,10 @@
 #define R 17.0
 #define R_PARTICLE 0.5
 
-#define N_PARTICLES 10
-#define N_STEPS 600
+#define N_PARTICLES 1000
+#define N_STEPS 60000
 #define U_0 20.0
-#define D_R 10.0
+#define D_R 0.1
 #define DT 0.0002
 
 //Diffusive parameters
@@ -31,7 +31,9 @@
 
 //Particle particle interaction
 #define GAMMA_PP 0.1 //GAM
-#define R_CUT_OFF_SQU 3
+#define R_CUT_OFF_TORQUE_2 3.0
+#define LAMBDA_PP 40.0
+#define R_CUT_OFF_FORCE 1.0
 //#define SIGMA_PP pow(1/2, 1/6)
 
 const double a = sqrt(3);
@@ -41,7 +43,8 @@ const double a = sqrt(3);
 int main(int argc, char **argv) {
     double time_start = walltime();
     //Check the number of particles compared to the size of the system
-
+    double r_particle = (R_CUT_OFF_FORCE-U_0/LAMBDA_PP)/2;
+    printf("The particle radius is %f\n", r_particle);
     int max_p = floor((R*R*0.9069)/(R_PARTICLE*R_PARTICLE));
     if (N_PARTICLES>max_p){
         printf("Too many particles\n");
@@ -64,7 +67,7 @@ int main(int argc, char **argv) {
     double delta_x, delta_y, temp_fx_n, temp_fy_n, temp_torque_n, r_pn_2;
 
     const char * restrict fileNameBase = "results/data";
-    const bool overwrite = false;
+    const bool overwrite = true;
     const char * restrict fileName;
 
     ///////////////////////////////////////////////////////////////////
@@ -119,7 +122,8 @@ int main(int argc, char **argv) {
                 delta_y = y[index_p]-y[index_n];
                 r_pn_2 = delta_x*delta_x + delta_y*delta_y;
 
-                if (r_pn_2 < R_CUT_OFF_SQU){
+                /* For WeeksChandlerAndersen potential
+                if (r_pn_2 < R_CUT_OFF_TORQUE_2){
                     if (r_pn_2 < 1.0){
                     //Here it is assumed that sigma=1/2^(1/6) which gives a particle radius of 1
                         forceWeeksChandlerAndersen(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y);
@@ -134,6 +138,20 @@ int main(int argc, char **argv) {
                     number_n[index_n]++;
                     number_n[index_p]++;
 
+                } */
+                if (r_pn_2 < R_CUT_OFF_FORCE*R_CUT_OFF_FORCE){
+                    if (r_pn_2 < R_CUT_OFF_TORQUE_2){
+                        torqueWeeksChandlerAndersen(&temp_torque_n, theta[index_p], theta[index_n], GAMMA_PP);
+                        torque_n[index_p] += temp_torque_n;
+                        torque_n[index_n] -= temp_torque_n;
+                        number_n[index_n]++;
+                        number_n[index_p]++;
+                    }
+                    forceHarmonicPP(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y, R_CUT_OFF_FORCE, LAMBDA_PP);
+                    fx_n[index_p] += temp_fx_n;
+                    fy_n[index_p] += temp_fy_n;
+                    fx_n[index_n] -= temp_fx_n;
+                    fy_n[index_n] -= temp_fy_n;
                 }
             }
 
