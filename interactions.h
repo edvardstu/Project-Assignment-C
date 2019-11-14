@@ -9,6 +9,12 @@ void forceWeeksChandlerAndersen(double *fx_n, double *fy_n, double r_pn_2, doubl
 
 void forceHarmonicPP(double *fx_n, double *fy_n, double r_pn_2, double delta_x, double delta_y, double r_cut_off_force, double lambda_pp);
 
-void torqueWeeksChandlerAndersen(double *torque_n, double theta_p, double theta_n, double gamma_pp);
+void forceOneOverRSquared(double *fx_n, double *fy_n, double r_pn_2, double delta_x, double delta_y, double sigma_pp);
+
+void forceOneOverRQuad(double *fx_n, double *fy_n, double r_pn_2, double delta_x, double delta_y);
+
+/*void torqueWeeksChandlerAndersen(double *torque_n, double theta_p, double theta_n, double gamma_pp);*/
+
+void torqueWeeksChandlerAndersen(double *torque_n, double theta_p, double theta_n, double gamma_pp, double r_pn_2);
 
 #endif

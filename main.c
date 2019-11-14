@@ -12,14 +12,14 @@
 #include "interactions.h"
 
 
-#define R 17.0
+#define R 18.0
 #define R_PARTICLE 0.5
 
 #define N_PARTICLES 1000
-#define N_STEPS 60000
-#define U_0 20.0
-#define D_R 0.1
-#define DT 0.0002
+#define N_STEPS 100000
+#define U_0 10.0
+#define D_R 0.2
+#define DT 0.0006
 
 //Diffusive parameters
 #define GAMMA_T 1
@@ -30,11 +30,12 @@
 #define KAPPA_HAR 2  //GS
 
 //Particle particle interaction
-#define GAMMA_PP 0.1 //GAM
-#define R_CUT_OFF_TORQUE_2 3.0
+#define GAMMA_PP 1.0 //GAM
+#define R_CUT_OFF_TORQUE_2 9.0
 #define LAMBDA_PP 40.0
-#define R_CUT_OFF_FORCE 1.0
+#define R_CUT_OFF_FORCE 2.0  // (R_CUT_OFF_FORCE)^2 > R_CUT_OFF_TORQUE_2
 //#define SIGMA_PP pow(1/2, 1/6)
+#define SIGMA_PP 1.0 //(SIGMA_PP*2)^2 > R_CUT_OFF_TORQUE_2
 
 const double a = sqrt(3);
 
@@ -49,7 +50,7 @@ int main(int argc, char **argv) {
     if (N_PARTICLES>max_p){
         printf("Too many particles\n");
         printf("Maximum number of particles is %d\n", max_p);
-        exit(-1);
+        //exit(-1);
     } else {
         printf("The system occupancy is %f\n", (double)N_PARTICLES/max_p);
     }
@@ -139,29 +140,33 @@ int main(int argc, char **argv) {
                     number_n[index_p]++;
 
                 } */
-                if (r_pn_2 < R_CUT_OFF_FORCE*R_CUT_OFF_FORCE){
-                    if (r_pn_2 < R_CUT_OFF_TORQUE_2){
-                        torqueWeeksChandlerAndersen(&temp_torque_n, theta[index_p], theta[index_n], GAMMA_PP);
-                        torque_n[index_p] += temp_torque_n;
-                        torque_n[index_n] -= temp_torque_n;
-                        number_n[index_n]++;
-                        number_n[index_p]++;
+                if (r_pn_2 < R_CUT_OFF_TORQUE_2){
+                    //if (r_pn_2 < R_CUT_OFF_FORCE*R_CUT_OFF_FORCE){
+                    if (r_pn_2 < 1.0){
+
+                        //forceHarmonicPP(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y, R_CUT_OFF_FORCE, LAMBDA_PP);
+                        forceOneOverRQuad(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y);
+                        fx_n[index_p] += temp_fx_n;
+                        fy_n[index_p] += temp_fy_n;
+                        fx_n[index_n] -= temp_fx_n;
+                        fy_n[index_n] -= temp_fy_n;
                     }
-                    forceHarmonicPP(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y, R_CUT_OFF_FORCE, LAMBDA_PP);
-                    fx_n[index_p] += temp_fx_n;
-                    fy_n[index_p] += temp_fy_n;
-                    fx_n[index_n] -= temp_fx_n;
-                    fy_n[index_n] -= temp_fy_n;
+                    torqueWeeksChandlerAndersen(&temp_torque_n, theta[index_p], theta[index_n], GAMMA_PP, r_pn_2);
+                    torque_n[index_p] += temp_torque_n;
+                    torque_n[index_n] -= temp_torque_n;
+                    number_n[index_n]++;
+                    number_n[index_p]++;
                 }
+
             }
 
             //Update particle parameters
-            x[index_p] = x[index_p] + (U_0*cos(theta[index_p]) + fx_b + fs_scale*fx_n[index_p])*DT;
-            y[index_p] = y[index_p] + (U_0*sin(theta[index_p]) + fy_b + fs_scale*fy_n[index_p])*DT;
+            x[index_p] = x[index_p] + (U_0*cos(theta[index_p]) + (fx_b + fx_n[index_p])*fs_scale)*DT;
+            y[index_p] = y[index_p] + (U_0*sin(theta[index_p]) + (fy_b + fy_n[index_p])*fs_scale)*DT;
             if (number_n[index_p] > 0){
-                theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + (torque_b + fs_scale*torque_n[index_p]/number_n[index_p])*DT;
+                theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + (torque_b + torque_n[index_p]/number_n[index_p])*fs_scale*DT;
             } else {
-                theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + torque_b*DT;
+                theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + torque_b*fs_scale*DT;
             }
 
         }

@@ -35,6 +35,25 @@ void forceHarmonicPP(double *fx_n, double *fy_n, double r_pn_2, double delta_x, 
     *fy_n = f*delta_y;
 }
 
-void torqueWeeksChandlerAndersen(double *torque_n, double theta_p, double theta_n, double gamma_pp){
+void forceOneOverRSquared(double *fx_n, double *fy_n, double r_pn_2, double delta_x, double delta_y, double sigma_pp){
+    double r_pn = sqrt(r_pn_2);
+    double r_pn_3 = r_pn_2*r_pn;
+    double f = 4*(2.0*sigma_pp*sigma_pp/r_pn-sigma_pp)/r_pn_3;
+    *fx_n = f*delta_x;
+    *fy_n = f*delta_y;
+}
+
+void forceOneOverRQuad(double *fx_n, double *fy_n, double r_pn_2, double delta_x, double delta_y){
+    //Here it is assumed that sigma=1/2^(1/6) which gives a particle radius of 1
+    double f = 12*(1.0/r_pn_2-1.0)/r_pn_2;
+    *fx_n = f*delta_x;
+    *fy_n = f*delta_y;
+}
+
+/*void torqueWeeksChandlerAndersen(double *torque_n, double theta_p, double theta_n, double gamma_pp){
+    *torque_n = gamma_pp*sin(theta_n-theta_p);
+}*/
+
+void torqueWeeksChandlerAndersen(double *torque_n, double theta_p, double theta_n, double gamma_pp, double r_pn_2){
     *torque_n = gamma_pp*sin(theta_n-theta_p);
 }
