@@ -16,7 +16,7 @@
 #define R_PARTICLE 0.5
 
 #define N_PARTICLES 1000
-#define N_STEPS 100000
+#define N_STEPS 600000
 #define U_0 10.0
 #define D_R 0.2
 #define DT 0.0006
@@ -26,8 +26,8 @@
 #define GAMMA_R 1
 
 //Boundary interatction
-#define LAMBDA_HAR 200 //FS
-#define KAPPA_HAR 2  //GS
+#define LAMBDA_HAR 20.0 //FS
+#define KAPPA_HAR 10.0  //GS
 
 //Particle particle interaction
 #define GAMMA_PP 1.0 //GAM
@@ -90,11 +90,18 @@ int main(int argc, char **argv) {
     sunflower(x, y, N_PARTICLES, 0, R);
     for (i=0;i<N_PARTICLES;i++) theta[i]=randDouble(-M_PI, M_PI, &r);
     for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf\n", i, x[i], y[i], theta[i]);
+
+    /*for (i=0;i<N_PARTICLES;i++){
+        theta[i] = i*M_PI/N_PARTICLES;
+        x[i] = 10.0 - 5.0*cos(theta[i]);
+        y[i] = 10.0 - 5.0*sin(theta[i]);
+    }*/
     /////////////////////////////////////////////////////////////////
 
 
+    fs_scale = 0.0;
     //For each time step
-    for (t = 1; t < N_STEPS; t++){
+    for (t = 1; t <= N_STEPS; t++){
         if (t % 1000 ==0 ) printf("%d\n",t);
 
         if (t <= 50000){
@@ -164,9 +171,11 @@ int main(int argc, char **argv) {
             x[index_p] = x[index_p] + (U_0*cos(theta[index_p]) + (fx_b + fx_n[index_p])*fs_scale)*DT;
             y[index_p] = y[index_p] + (U_0*sin(theta[index_p]) + (fy_b + fy_n[index_p])*fs_scale)*DT;
             if (number_n[index_p] > 0){
-                theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + (torque_b + torque_n[index_p]/number_n[index_p])*fs_scale*DT;
+                //theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + (torque_b + torque_n[index_p]/number_n[index_p])*fs_scale*DT;
+                theta[index_p] = theta[index_p]  + (torque_b + torque_n[index_p]/number_n[index_p])*fs_scale*DT;
             } else {
-                theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + torque_b*fs_scale*DT;
+                //theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + torque_b*fs_scale*DT;
+                theta[index_p] = theta[index_p] + torque_b*fs_scale*DT;
             }
 
         }
