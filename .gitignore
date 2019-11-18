@@ -57,5 +57,6 @@ Mkfile.old
 dkms.conf
 
 results/data.txt
+results/
 
 # End of https://www.gitignore.io/api/c

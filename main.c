@@ -10,15 +10,17 @@
 
 #include "utilities.h"
 #include "interactions.h"
+#include "str_builder.h"
 
 
-#define R 18.0
+
+#define R 17.0
 #define R_PARTICLE 0.5
-
 #define N_PARTICLES 1000
-#define N_STEPS 600000
 #define U_0 10.0
 #define D_R 0.2
+
+#define N_STEPS 100000
 #define DT 0.0006
 
 //Diffusive parameters
@@ -26,16 +28,17 @@
 #define GAMMA_R 1
 
 //Boundary interatction
-#define LAMBDA_HAR 20.0 //FS
+#define LAMBDA_HAR 200.0//20.0 //FS
 #define KAPPA_HAR 10.0  //GS
 
 //Particle particle interaction
-#define GAMMA_PP 1.0 //GAM
-#define R_CUT_OFF_TORQUE_2 9.0
+#define GAMMA_PP 10.0//1.0 //GAM
+#define R_CUT_OFF_TORQUE_2 4.0//9.0
 #define LAMBDA_PP 40.0
 #define R_CUT_OFF_FORCE 2.0  // (R_CUT_OFF_FORCE)^2 > R_CUT_OFF_TORQUE_2
 //#define SIGMA_PP pow(1/2, 1/6)
 #define SIGMA_PP 1.0 //(SIGMA_PP*2)^2 > R_CUT_OFF_TORQUE_2
+
 
 const double a = sqrt(3);
 
@@ -68,14 +71,19 @@ int main(int argc, char **argv) {
     double delta_x, delta_y, temp_fx_n, temp_fy_n, temp_torque_n, r_pn_2;
 
     const char * restrict fileNameBase = "results/data";
-    const bool overwrite = true;
+    const bool overwrite = false;
     const char * restrict fileName;
 
     ///////////////////////////////////////////////////////////////////
 
 
     ///////////////////Opening file for results ///////////////////////
-    fileName = createFileName(fileNameBase, overwrite);
+    fileNameBase = createFileNameBase(fileNameBase, overwrite);
+    fileName = createFileName(fileNameBase);
+    writeSimulationParameters(fileNameBase, R, R_PARTICLE, N_PARTICLES, U_0, D_R, N_STEPS, DT, GAMMA_T, GAMMA_R, LAMBDA_HAR, KAPPA_HAR, GAMMA_PP, R_CUT_OFF_TORQUE_2, LAMBDA_PP, R_CUT_OFF_FORCE, SIGMA_PP);
+
+
+
     openFile(fileName, &fp);
     //fp = fopen(fileName, "w");
     ///////////////////////////////////////////////////////////////////
@@ -112,6 +120,12 @@ int main(int argc, char **argv) {
         double fy_n[N_PARTICLES] = {0};
         double torque_n[N_PARTICLES] = {0};
         double number_n[N_PARTICLES] = {0};
+        /*for (index_p = 0; index_p < N_PARTICLES; index_p++){
+            fx_n[N_PARTICLES] = 0;// = {0};
+            fy_n[N_PARTICLES] = 0;// = {0};
+            torque_n[N_PARTICLES] = 0;// = {0};
+            number_n[N_PARTICLES] = 0;// = {0};
+        }*/
 
         for (index_p = 0; index_p < N_PARTICLES; index_p++){
             //Find forces and torque from wall
@@ -171,15 +185,16 @@ int main(int argc, char **argv) {
             x[index_p] = x[index_p] + (U_0*cos(theta[index_p]) + (fx_b + fx_n[index_p])*fs_scale)*DT;
             y[index_p] = y[index_p] + (U_0*sin(theta[index_p]) + (fy_b + fy_n[index_p])*fs_scale)*DT;
             if (number_n[index_p] > 0){
-                //theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + (torque_b + torque_n[index_p]/number_n[index_p])*fs_scale*DT;
-                theta[index_p] = theta[index_p]  + (torque_b + torque_n[index_p]/number_n[index_p])*fs_scale*DT;
+                theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + (torque_b + torque_n[index_p]/number_n[index_p])*fs_scale*DT;
+                //theta[index_p] = theta[index_p]  + (torque_b + torque_n[index_p]/number_n[index_p])*fs_scale*DT;
             } else {
-                //theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + torque_b*fs_scale*DT;
-                theta[index_p] = theta[index_p] + torque_b*fs_scale*DT;
+                theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + torque_b*fs_scale*DT;
+                //theta[index_p] = theta[index_p] + torque_b*fs_scale*DT;
             }
 
         }
         if (t % 50 ==0){
+        //if (t % 100 ==0){
             for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf\n", i, x[i], y[i], theta[i]);
         }
     }

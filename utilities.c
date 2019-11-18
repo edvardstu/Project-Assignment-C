@@ -11,6 +11,7 @@
 #include "utilities.h"
 #include "str_builder.h"
 
+
 void testFunc(){
     printf("Hello World");
 }
@@ -83,7 +84,7 @@ double walltime(){
 	return ( t.tv_sec + 1e-6 * t.tv_usec );
 }
 
-const char* restrict createFileName(const char* restrict fileNameBase, bool overwrite){
+const char* restrict createFileNameBase(const char* restrict fileNameBase, bool overwrite){
     const char * restrict fileName;
     const char * TXT = ".txt";
     bool fileExists = true;
@@ -114,8 +115,63 @@ const char* restrict createFileName(const char* restrict fileNameBase, bool over
         }
     }
 
+    str_builder_clear(sb);
+    str_builder_add_str(sb, fileNameBase, 0);
+    str_builder_add_int(sb,fileNumber);
+
     fileName = str_builder_dump(sb, NULL);
     str_builder_destroy(sb);
 
     return fileName;
+}
+
+const char* restrict createFileName(const char* restrict fileNameBase){
+    const char * restrict fileName;
+    const char * TXT = ".txt";
+    str_builder_t *sb;
+    sb = str_builder_create();
+    str_builder_add_str(sb, fileNameBase, 0);
+    str_builder_add_str(sb, TXT, 0);
+    fileName = str_builder_dump(sb, NULL);
+    str_builder_destroy(sb);
+    return fileName;
+}
+
+void writeSimulationParameters(const char* restrict fileNameBase, double r, double r_particle, unsigned int n_particles, double u_0, double D_r, unsigned int n_steps, double dt, double gamma_t, double gamma_r, double lambda_har, double kappa_har, double gamma_pp, double r_cut_off_torque_2, double lambda_pp, double r_cut_off_force, double sigma_pp){
+    str_builder_t *sb;
+    FILE *fp;
+    const char * TXT = ".txt";
+    sb = str_builder_create();
+    str_builder_add_str(sb, fileNameBase, 0);
+    str_builder_add_str(sb, "SimulationParameters", 0);
+    str_builder_add_str(sb, TXT, 0);
+    const char * fileName = str_builder_dump(sb, NULL);
+    openFile(fileName, &fp);
+
+    fprintf(fp, "System and particle parameters\n");
+    fprintf(fp, "Radius of system: %.1f\n", r);
+    fprintf(fp, "Radius of particles: %.3f\n", r_particle);
+    fprintf(fp, "Number of particles: %d\n", n_particles);
+    fprintf(fp, "Particle velocity: %.1f\n", u_0);
+    fprintf(fp, "D_r: %.3f\n", D_r);
+
+    fprintf(fp, "\nNummerical solver parameters\n");
+    fprintf(fp, "Number of steps: %d\n", n_steps);
+    fprintf(fp, "Time step: %.5f\n", dt);
+
+    fprintf(fp, "\nBoundary interaction\n");
+    fprintf(fp, "Lambda harmonic: %.1f\n", gamma_t);
+    fprintf(fp, "Kappa harmonic: %.1f\n", gamma_r);
+
+    fprintf(fp, "\nParticle-Particle interaction\n");
+    fprintf(fp, "Gamma particle-particle: %.1f\n", gamma_pp);
+    fprintf(fp, "Cut off radius for torque squared: %.1f\n", r_cut_off_torque_2);
+    fprintf(fp, "Lambda particle-particle: %.1f\n", lambda_pp);
+    fprintf(fp, "Cut off radius force: %.1f\n", r_cut_off_force);
+    fprintf(fp, "Sigma particle-particle: %.1f\n", sigma_pp);
+
+
+
+    closeFile(fileName, &fp);
+    str_builder_destroy(sb);
 }
