@@ -29,6 +29,7 @@ const char* restrict createFileName(const char* restrict fileNameBase);
 
 void writeSimulationParameters(const char* restrict fileNameBase, double r, double r_particle, unsigned int n_particles, double u_0, double D_r, unsigned int n_steps, double dt, double gamma_t, double gamma_r, double lambda_har, double kappa_har, double gamma_pp, double r_cut_off_torque_2, double lambda_pp, double r_cut_off_force, double sigma_pp);
 
+void swapPointers(double *Y_i, double *Y_i_prev);
 
 
 #endif

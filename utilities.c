@@ -168,10 +168,16 @@ void writeSimulationParameters(const char* restrict fileNameBase, double r, doub
     fprintf(fp, "Cut off radius for torque squared: %.1f\n", r_cut_off_torque_2);
     fprintf(fp, "Lambda particle-particle: %.1f\n", lambda_pp);
     fprintf(fp, "Cut off radius force: %.1f\n", r_cut_off_force);
-    fprintf(fp, "Sigma particle-particle: %.1f\n", sigma_pp);
+    fprintf(fp, "Sigma particle-particle: %.3f\n", sigma_pp);
 
 
 
     closeFile(fileName, &fp);
     str_builder_destroy(sb);
+}
+
+void swapPointers(double *Y_i, double *Y_i_prev){
+    double temp = *Y_i;
+    *Y_i = *Y_i_prev;
+    *Y_i_prev = temp;
 }

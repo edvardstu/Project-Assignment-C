@@ -20,7 +20,7 @@
 #define U_0 10.0
 #define D_R 0.2
 
-#define N_STEPS 100000
+#define N_STEPS 300000//300000
 #define DT 0.0006
 
 //Diffusive parameters
@@ -33,12 +33,12 @@
 
 //Particle particle interaction
 #define GAMMA_PP 10.0//1.0 //GAM
-#define R_CUT_OFF_TORQUE_2 4.0//9.0
+#define R_CUT_OFF_TORQUE_2 4.0 //9.0
 #define LAMBDA_PP 40.0
 #define R_CUT_OFF_FORCE 2.0  // (R_CUT_OFF_FORCE)^2 > R_CUT_OFF_TORQUE_2
 //#define SIGMA_PP pow(1/2, 1/6)
-#define SIGMA_PP 1.0 //(SIGMA_PP*2)^2 > R_CUT_OFF_TORQUE_2
-
+//#define SIGMA_PP 1.0 //(SIGMA_PP*2)^2 > R_CUT_OFF_TORQUE_2
+const double SIGMA_PP = 1.5;//sqrt(2.0);//1/sqrt(2);
 
 const double a = sqrt(3);
 
@@ -74,6 +74,15 @@ int main(int argc, char **argv) {
     const bool overwrite = false;
     const char * restrict fileName;
 
+    //Helping variables for Adams_Bashforth
+    double *Y_x = malloc(N_PARTICLES*sizeof(double));
+    double *Y_x_prev = malloc(N_PARTICLES*sizeof(double));
+    double *Y_y = malloc(N_PARTICLES*sizeof(double));
+    double *Y_y_prev = malloc(N_PARTICLES*sizeof(double));
+    double *Y_th = malloc(N_PARTICLES*sizeof(double));
+    double *Y_th_prev = malloc(N_PARTICLES*sizeof(double));
+    //double Y_x[N_PARTICLES], Y_y[N_PARTICLES], Y_th[N_PARTICLES];
+    //double Y_x_prev[N_PARTICLES], Y_y_prev[N_PARTICLES], Y_th_prev[N_PARTICLES];
     ///////////////////////////////////////////////////////////////////
 
 
@@ -163,10 +172,12 @@ int main(int argc, char **argv) {
                 } */
                 if (r_pn_2 < R_CUT_OFF_TORQUE_2){
                     //if (r_pn_2 < R_CUT_OFF_FORCE*R_CUT_OFF_FORCE){
-                    if (r_pn_2 < 1.0){
+                    //if (r_pn_2 < 1.0){
+                    if (r_pn_2 < 2*SIGMA_PP*SIGMA_PP) {
 
                         //forceHarmonicPP(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y, R_CUT_OFF_FORCE, LAMBDA_PP);
-                        forceOneOverRQuad(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y);
+                        //forceOneOverRQuad(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y);
+                        forceOneOverRQuadSig(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y, SIGMA_PP);
                         fx_n[index_p] += temp_fx_n;
                         fy_n[index_p] += temp_fy_n;
                         fx_n[index_n] -= temp_fx_n;
@@ -181,22 +192,40 @@ int main(int argc, char **argv) {
 
             }
 
-            //Update particle parameters
-            x[index_p] = x[index_p] + (U_0*cos(theta[index_p]) + (fx_b + fx_n[index_p])*fs_scale)*DT;
-            y[index_p] = y[index_p] + (U_0*sin(theta[index_p]) + (fy_b + fy_n[index_p])*fs_scale)*DT;
+            //Update Adams-Bashforth helping parameters
+            Y_x[index_p] = U_0*cos(theta[index_p]) + (fx_b + fx_n[index_p])*fs_scale;
+            Y_y[index_p] = U_0*sin(theta[index_p]) + (fy_b + fy_n[index_p])*fs_scale;
             if (number_n[index_p] > 0){
-                theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + (torque_b + torque_n[index_p]/number_n[index_p])*fs_scale*DT;
-                //theta[index_p] = theta[index_p]  + (torque_b + torque_n[index_p]/number_n[index_p])*fs_scale*DT;
+                Y_th[index_p] = (torque_b + torque_n[index_p]/number_n[index_p])*fs_scale;
             } else {
-                theta[index_p] = theta[index_p] + sqrt(2*D_R*DT)*randDouble(-a, a, &r) + torque_b*fs_scale*DT;
-                //theta[index_p] = theta[index_p] + torque_b*fs_scale*DT;
+                Y_th[index_p] = torque_b*fs_scale;
             }
+
+            if (t==1){
+                Y_x_prev[index_p] = Y_x[index_p];
+                Y_y_prev[index_p] = Y_y[index_p];
+                Y_th_prev[index_p] = Y_th[index_p];
+            }
+
+            //Update particle parameters
+            x[index_p] = x[index_p] + (3/2*Y_x[index_p] - 1/2*Y_x_prev[index_p])*DT;
+            y[index_p] = y[index_p] + (3/2*Y_y[index_p] - 1/2*Y_y_prev[index_p])*DT;
+            theta[index_p] = theta[index_p] + (3/2*Y_th[index_p] - 1/2*Y_th_prev[index_p])*DT + sqrt(2*D_R*DT)*randDouble(-a, a, &r);
+
+
 
         }
         if (t % 50 ==0){
         //if (t % 100 ==0){
             for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf\n", i, x[i], y[i], theta[i]);
         }
+//        printf("Y_x\t\t");
+//        for (i=0;i<N_PARTICLES;i++) printf("%f\t", Y_x[i]);
+//        printf("\n");
+        swapPointers(Y_x, Y_x_prev);
+//        printf("Y_x swapped\t");
+//        for (i=0;i<N_PARTICLES;i++) printf("%f\t", Y_x[i]);
+//        printf("\n");
     }
 
 

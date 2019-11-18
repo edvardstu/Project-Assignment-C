@@ -50,6 +50,13 @@ void forceOneOverRQuad(double *fx_n, double *fy_n, double r_pn_2, double delta_x
     *fy_n = f*delta_y;
 }
 
+void forceOneOverRQuadSig(double *fx_n, double *fy_n, double r_pn_2, double delta_x, double delta_y, double sigma_pp){
+    //Here it is assumed that sigma=1/2^(1/6) which gives a particle radius of 1
+    double f = 12*((2.0*sigma_pp*sigma_pp)/r_pn_2-1.0)/r_pn_2;
+    *fx_n = f*delta_x;
+    *fy_n = f*delta_y;
+}
+
 /*void torqueWeeksChandlerAndersen(double *torque_n, double theta_p, double theta_n, double gamma_pp){
     *torque_n = gamma_pp*sin(theta_n-theta_p);
 }*/
