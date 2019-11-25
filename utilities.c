@@ -48,6 +48,18 @@ void openFile(const char * restrict fileName, FILE** fp){
     }
 }
 
+void readFile(const char * restrict fileName, FILE** fp){
+    *fp = fopen(fileName, "r");
+    if (fp == NULL){
+        int errnum = errno;
+        fprintf(stderr, "Value of errno %d\n", errno);
+        fprintf(stderr, "Error: %s\n", strerror(errno));
+        exit(-1);
+    } else {
+        printf("Opened the file: %s\n", fileName);
+    }
+}
+
 void closeFile(const char * restrict fileName, FILE** fp){
     if (fclose(*fp)!=0){
         fprintf(stderr, "Error closing file, %s\n", fileName);
@@ -177,8 +189,80 @@ void writeSimulationParameters(const char* restrict fileNameBase, double r, doub
     str_builder_destroy(sb);
 }
 
+void writeFinalState(const char* restrict fileNameBase, int n_particles, double time, double x[], double y[], double theta[], double d_r){
+    str_builder_t *sb;
+    FILE *fp;
+    const char * TXT = ".txt";
+    sb = str_builder_create();
+    str_builder_add_str(sb, fileNameBase, 0);
+    str_builder_add_str(sb, "FinalState", 0);
+    str_builder_add_str(sb, TXT, 0);
+    const char * fileName = str_builder_dump(sb, NULL);
+    openFile(fileName, &fp);
+
+    for (int i=0;i<n_particles;i++) fprintf(fp,"%d %lf %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i], d_r);
+
+    closeFile(fileName, &fp);
+    str_builder_destroy(sb);
+}
+
 void swapPointers(double *Y_i, double *Y_i_prev){
     double temp = *Y_i;
     *Y_i = *Y_i_prev;
     *Y_i_prev = temp;
+}
+
+const char* restrict createFileNamePrevious(const char* restrict fileNameBase, bool overwrite){
+    const char * restrict fileName;
+    const char * TXT = ".txt";
+    bool fileExists = true;
+    int fileNumber = 0;
+
+    str_builder_t *sb;
+    sb = str_builder_create();
+    str_builder_add_str(sb, fileNameBase, 0);
+    str_builder_add_int(sb,fileNumber);
+    str_builder_add_str(sb, TXT, 0);
+
+    if (!overwrite){
+        fileName = str_builder_peek(sb);
+        while (fileExists){
+            if( access( fileName, F_OK ) != -1 ) {
+                fileNumber++;
+                str_builder_clear(sb);
+                str_builder_add_str(sb, fileNameBase, 0);
+                str_builder_add_int(sb,fileNumber);
+                str_builder_add_str(sb, TXT, 0);
+                fileName = str_builder_peek(sb);
+            } else {
+                fileExists = false;
+            }
+
+        }
+    }
+
+    str_builder_clear(sb);
+    str_builder_add_str(sb, fileNameBase, 0);
+    str_builder_add_int(sb, fileNumber-1);
+    str_builder_add_str(sb, "FinalState.txt", 0);
+
+    fileName = str_builder_dump(sb, NULL);
+    str_builder_destroy(sb);
+
+    return fileName;
+}
+
+void readInitialState(const char* restrict fileName, int n_particles, double *time, double x[], double y[], double theta[], double *d_r){
+    FILE *fp;
+    readFile(fileName, &fp);
+    int dummy;
+    int status;
+    for (int i=0;i<n_particles;i++){
+        status = fscanf(fp,"%d %lf %lf %lf %lf %lf\n", &dummy, time, &x[i], &y[i], &theta[i], d_r);
+        if (status != 6){
+            printf("Line was read incorrectly, number of elements was %d, not 6\n", status);
+        }
+    }
+    closeFile(fileName, &fp);
+
 }

@@ -18,9 +18,9 @@
 #define R_PARTICLE 0.5
 #define N_PARTICLES 1000
 #define U_0 10.0
-#define D_R 0.2
+#define D_R_C 0.2
 
-#define N_STEPS 400000//400000//300000
+#define N_STEPS 500000//400000//300000
 #define DT 0.0005 //0.0006
 
 //Diffusive parameters
@@ -70,9 +70,9 @@ int main(int argc, char **argv) {
     //Parameters for particle particle interaction
     double delta_x, delta_y, temp_fx_n, temp_fy_n, temp_torque_n, r_pn_2;
 
-    //const char * restrict fileNameBase = "results/testAB";
-    const char * restrict fileNameBase = "/home/edvardst/Documents/NTNU/Programming/Project_Assignment/C_plots/Results/Integrators/AB";
-    const bool overwrite = true;
+    const char * restrict fileNameBase = "transient/dummy";
+    //const char * restrict fileNameBase = "/home/edvardst/Documents/NTNU/Programming/Project_Assignment/C_plots/Results/Integrators/AB";
+    const bool overwrite = false;
     const char * restrict fileName;
 
     //Helping variables for Adams_Bashforth
@@ -82,18 +82,19 @@ int main(int argc, char **argv) {
     double *Y_y_prev = malloc(N_PARTICLES*sizeof(double));
     double *Y_th = malloc(N_PARTICLES*sizeof(double));
     double *Y_th_prev = malloc(N_PARTICLES*sizeof(double));
+
+    //Parameters for loading previos Results
+    const char * restrict fileNamePrevious;
+    bool continueFromPrev = true;
+    double D_R;
+    double D_R_I;
     ///////////////////////////////////////////////////////////////////
 
 
-    ///////////////////Opening file for results ///////////////////////
+    //////////////////////Creating file names /////////////////////////
+    fileNamePrevious = createFileNamePrevious(fileNameBase, overwrite);
     fileNameBase = createFileNameBase(fileNameBase, overwrite);
     fileName = createFileName(fileNameBase);
-    writeSimulationParameters(fileNameBase, R, R_PARTICLE, N_PARTICLES, U_0, D_R, N_STEPS, DT, GAMMA_T, GAMMA_R, LAMBDA_HAR, KAPPA_HAR, GAMMA_PP, R_CUT_OFF_TORQUE_2, LAMBDA_PP, R_CUT_OFF_FORCE, SIGMA_PP);
-
-
-
-    openFile(fileName, &fp);
-    //fp = fopen(fileName, "w");
     ///////////////////////////////////////////////////////////////////
 
     //////////////////////Setting up GSL RNG ////////////////////////
@@ -103,11 +104,26 @@ int main(int argc, char **argv) {
     /////////////////////////////////////////////////////////////////
 
     //////////Setting up particle position and angle ////////////////
-    time = 0;
-    sunflower(x, y, N_PARTICLES, 0, R);
-    for (i=0;i<N_PARTICLES;i++) theta[i]=randDouble(-M_PI, M_PI, &r);
-    for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i]);
 
+    if (!continueFromPrev){
+        time = 0;
+        D_R = D_R_C;
+        sunflower(x, y, N_PARTICLES, 0, R);
+        for (i=0;i<N_PARTICLES;i++) theta[i]=randDouble(-M_PI, M_PI, &r);
+    } else {
+        readInitialState(fileNamePrevious, N_PARTICLES, &time, x, y, theta, &D_R_I);
+        D_R = D_R_I;
+        if (D_R_C != D_R_I){
+            printf("D_r was initilized to %.3f, but change to %.3f\n", D_R_C, D_R_I);
+        }
+    }
+
+    /////////////////////////////////////////////////////////////////
+
+    ///////////////////Opening file for results ///////////////////////
+    writeSimulationParameters(fileNameBase, R, R_PARTICLE, N_PARTICLES, U_0, D_R, N_STEPS, DT, GAMMA_T, GAMMA_R, LAMBDA_HAR, KAPPA_HAR, GAMMA_PP, R_CUT_OFF_TORQUE_2, LAMBDA_PP, R_CUT_OFF_FORCE, SIGMA_PP);
+    openFile(fileName, &fp);
+    for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i], D_R);
     /////////////////////////////////////////////////////////////////
 
 
@@ -117,7 +133,12 @@ int main(int argc, char **argv) {
         if (t % 1000 ==0 ) printf("%d\n",t);
 
         if (t <= 50000){
-          fs_scale=0.01+t*0.99/50000.0;
+            if (!continueFromPrev){
+                fs_scale=0.01+t*0.99/50000.0;
+            } else {
+                fs_scale=1.0;
+                D_R = D_R_I*(1+0.01+t*0.99/50000.0);
+            }
         }
 
         double fx_n[N_PARTICLES] = {0};
@@ -205,14 +226,15 @@ int main(int argc, char **argv) {
 
         }
         time += DT;
-        if (t % 200 ==0){
+        if (t % 500 ==0){
         //if (t % 100 ==0){
-            for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i]);
+            for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i], D_R);
         }
         swapPointers(Y_x, Y_x_prev);
         swapPointers(Y_y, Y_y_prev);
         swapPointers(Y_th, Y_th_prev);
     }
+    writeFinalState(fileNameBase, N_PARTICLES, time, x, y, theta, D_R);
 
 
 
