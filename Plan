@@ -1,24 +1,62 @@
-Implementer AB
-
-Sjekk euler mot seg selv med forskjellige tidssteg. r_i mot r_i
 
 Plot r_AB og r_E med støy og samme tidssteg
-Skriv om dette for å vise at programmet funker
-
-Plot r_AB og r_E med forskjellige tidssteg uten støy.
-
-1. Kalibrer. 100 partikler, finn riktig tidssteg. Få partiklenee til å gjøre noen runder i innhegningen
-Delta t må bestemmes for å gitt T_tot. Finne baseline delta t for euler 0.1% forskjell på to delta t
-
-2. Sjekk AB mot Euler. Øk delta t til AB og se hvor lenge den er nøyaktig
-
-3. Sjekk AB og Euler med støy også
 
 
+Kalibrering av tidssteg, og sjekke av nummersik løser.
 
-Videre, forsøke å lage en uniform virvel. Prøve å lage en veske
-Endre til et mykere potenisal
-Prøve harmonisk protensial 1/2k*(r-D)²
-Prøve V=1/r², cutoff på cirka 10.
-1000 partikler
-Velg potensialets rekkevidde og størrelse på sirkle slik at dreiemomentet fungerer mellom nærmeste naboer når det er likevekt mellom partikler tett pakket  
+1. Få partiklenee til å gjøre noen runder i innhegningen. Delta t må bestemmes for å gitt T_tot.
+Finn baseline delta t for euler 0.1% forskjell på to delta t.
+Gjør dette ved å se på <|r_i*-r_i|/r_particle> som tilhører delta_t* og delta_t
+
+2 100 partikler, finn riktig tidssteg. Plot r_i*-r_i med forskjellige tidssteg uten støy.
+
+3. Øk delta_T til AB og se hvor lenge den er nøyaktig
+
+4. Sjekk AB og Euler med støy også
+
+*. Pass på at partikler er jevn fordelt. Kan være en fordel å bruke resultat fra uniform strømning.
+
+Skriv om disse fire punktene for å vise at programmet funker.
+
+
+Spørsmål:
+- Hvor mange partikler? 100
+- Hvor høy tetthet? Samme som systemet
+- Hvor lenge skal de kjøre? Hvertfall en runde
+- Hvor høy presisjon?
+- Hva skal gjøres med problmeatikken når de krasjer? Prøve med AB isted
+
+- Titler på plot?
+
+
+Velg potensialets rekkevidde og størrelse på sirkle slik at dreiemomentet fungerer mellom nærmeste naboer når det er likevekt mellom partikler tett pakket
+
+Lage resultater for uniform størmning:
+
+1. Finn D_r verdi som gir uniform størmning
+
+2. Reduser D_r verdien gradevis, og la systemet kjøre til likevekt
+
+3. Finn D_r verdien hvor uniform strøming ikke lengre kan oppnåes.
+
+4. For verdier i dette området, forsøk med et tilfeldig initert system, og se om en når en uniform strømning.
+
+Presentasjon av resultater:
+
+1. Se på ordensparameter p_theta for forskjellige D_r verider
+
+2. For hver D_r verdi se på fluktuasjonen pi.
+
+Notater:
+flying xy-model
+merin wagner
+
+Energi inn, svømming
+Energi ut, friksjon
+
+Sjekk fordeling av partikler
+Test steg for AB
+
+La torque fra vegg gå mot null
+
+Jamming i system

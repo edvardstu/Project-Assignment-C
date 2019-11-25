@@ -1,6 +1,4 @@
 TODO
 
-- Make text file with all simulation parameters
-- If file exists, make a new file/folder
 - Json input?
 - Parallellize with OpenMP. NB remeber to move pp-interaction into its own loop before the rest

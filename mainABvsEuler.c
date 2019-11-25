@@ -14,14 +14,15 @@
 
 
 
-#define R 17.0
+#define R 6.0//17.0
 #define R_PARTICLE 0.5
-#define N_PARTICLES 1000
+#define N_PARTICLES 100//1000
 #define U_0 10.0
-#define D_R 0.2
+#define D_R 0.0//0.2
 
-#define N_STEPS 400000//400000//300000
-#define DT 0.0005 //0.0006
+#define FACTOR 100
+#define N_STEPS 400*FACTOR//400000//300000
+#define DT 0.01/FACTOR //0.0006
 
 //Diffusive parameters
 #define GAMMA_T 1
@@ -62,7 +63,7 @@ int main(int argc, char **argv) {
     //////////////////////Setting up variables ////////////////////////
     FILE *fp;
     double x[N_PARTICLES], y[N_PARTICLES], theta[N_PARTICLES];
-    double fs_scale, time;
+    double fs_scale;
     //Loop parameters
     unsigned int t, index_p, index_n, i;
     //Parameters for boundary
@@ -82,6 +83,8 @@ int main(int argc, char **argv) {
     double *Y_y_prev = malloc(N_PARTICLES*sizeof(double));
     double *Y_th = malloc(N_PARTICLES*sizeof(double));
     double *Y_th_prev = malloc(N_PARTICLES*sizeof(double));
+    //double Y_x[N_PARTICLES], Y_y[N_PARTICLES], Y_th[N_PARTICLES];
+    //double Y_x_prev[N_PARTICLES], Y_y_prev[N_PARTICLES], Y_th_prev[N_PARTICLES];
     ///////////////////////////////////////////////////////////////////
 
 
@@ -103,11 +106,21 @@ int main(int argc, char **argv) {
     /////////////////////////////////////////////////////////////////
 
     //////////Setting up particle position and angle ////////////////
-    time = 0;
-    sunflower(x, y, N_PARTICLES, 0, R);
+    //sunflower(x, y, N_PARTICLES, 0, R);
     for (i=0;i<N_PARTICLES;i++) theta[i]=randDouble(-M_PI, M_PI, &r);
-    for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i]);
+    for (i=0;i<N_PARTICLES;i++){
+        double radius = randDouble(0, R, &r);
+        x[i] = radius*cos(theta[i]);
+        x[i] = radius*cos(theta[i]);
+    }
+    //for (i=0;i<N_PARTICLES;i++) theta[i]=atan2(y[i], x[i]) - M_PI/2 + randDouble(-M_PI/10, M_PI/10, &r);
+    for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf\n", i, x[i], y[i], theta[i]);
 
+    /*for (i=0;i<N_PARTICLES;i++){
+        theta[i] = i*M_PI/N_PARTICLES;
+        x[i] = 10.0 - 5.0*cos(theta[i]);
+        y[i] = 10.0 - 5.0*sin(theta[i]);
+    }*/
     /////////////////////////////////////////////////////////////////
 
 
@@ -116,14 +129,21 @@ int main(int argc, char **argv) {
     for (t = 1; t <= N_STEPS; t++){
         if (t % 1000 ==0 ) printf("%d\n",t);
 
-        if (t <= 50000){
+        /*if (t <= 50000){
           fs_scale=0.01+t*0.99/50000.0;
-        }
+        }*/
+        fs_scale=1.0;
 
         double fx_n[N_PARTICLES] = {0};
         double fy_n[N_PARTICLES] = {0};
         double torque_n[N_PARTICLES] = {0};
         double number_n[N_PARTICLES] = {0};
+        /*for (index_p = 0; index_p < N_PARTICLES; index_p++){
+            fx_n[N_PARTICLES] = 0;// = {0};
+            fy_n[N_PARTICLES] = 0;// = {0};
+            torque_n[N_PARTICLES] = 0;// = {0};
+            number_n[N_PARTICLES] = 0;// = {0};
+        }*/
 
         for (index_p = 0; index_p < N_PARTICLES; index_p++){
             //Find forces and torque from wall
@@ -196,6 +216,8 @@ int main(int argc, char **argv) {
                 Y_th_prev[index_p] = Y_th[index_p];
             }
 
+            //if (abs((Y_th[index_p] - Y_th_prev[index_p])<0.000001) && (t>1)) printf("%d, %d, AB wrong\n", t, index_p);
+
             //Update particle parameters
             x[index_p] = x[index_p] + (3/2*Y_x[index_p] - 1/2*Y_x_prev[index_p])*DT;
             y[index_p] = y[index_p] + (3/2*Y_y[index_p] - 1/2*Y_y_prev[index_p])*DT;
@@ -204,15 +226,23 @@ int main(int argc, char **argv) {
 
 
         }
-        time += DT;
-        if (t % 200 ==0){
+        if (t % FACTOR ==0){
         //if (t % 100 ==0){
-            for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i]);
+            for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf\n", i, x[i], y[i], theta[i]);
         }
+//        printf("Y_x\t\t");
+//        for (i=0;i<N_PARTICLES;i++) printf("%f\t", Y_x[i]);
+//        printf("\n");
         swapPointers(Y_x, Y_x_prev);
         swapPointers(Y_y, Y_y_prev);
         swapPointers(Y_th, Y_th_prev);
+//        printf("Y_x swapped\t");
+//        for (i=0;i<N_PARTICLES;i++) printf("%f\t", Y_x[i]);
+//        printf("\n");
     }
+
+
+
 
 
 

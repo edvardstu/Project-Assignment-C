@@ -26,7 +26,7 @@ void setUpRNG(const gsl_rng_type **T, gsl_rng **r){
     gsl_rng_env_setup();
     *T = gsl_rng_default;
     *r = gsl_rng_alloc (*T);
-    gsl_rng_set(*r, random_seed());
+    //gsl_rng_set(*r, random_seed());
     printf ("RNG type: %s\n", gsl_rng_name(*r));
 }
 
@@ -93,6 +93,7 @@ const char* restrict createFileNameBase(const char* restrict fileNameBase, bool 
     str_builder_t *sb;
     sb = str_builder_create();
     str_builder_add_str(sb, fileNameBase, 0);
+    str_builder_add_int(sb,fileNumber);
     str_builder_add_str(sb, TXT, 0);
 
     if (!overwrite){
