@@ -18,9 +18,9 @@
 #define R_PARTICLE 0.5
 #define N_PARTICLES 1000
 #define U_0 10.0
-#define D_R_C 0.2
+#define D_R_C 0.8
 
-#define N_STEPS 500000//400000//300000
+#define N_STEPS 50000//400000//300000
 #define DT 0.0005 //0.0006
 
 //Diffusive parameters
@@ -46,6 +46,10 @@ const double a = sqrt(3);
 
 int main(int argc, char **argv) {
     double time_start = walltime();
+
+    bool continueFromPrev = false;
+    for (int k=0; k<2; k++){
+    printf("Time frame %d of %d\n", k+1, 6);
     //Check the number of particles compared to the size of the system
     double r_particle = (R_CUT_OFF_FORCE-U_0/LAMBDA_PP)/2;
     printf("The particle radius is %f\n", r_particle);
@@ -61,7 +65,7 @@ int main(int argc, char **argv) {
 
     //////////////////////Setting up variables ////////////////////////
     FILE *fp;
-    double x[N_PARTICLES], y[N_PARTICLES], theta[N_PARTICLES];
+    double x[N_PARTICLES], y[N_PARTICLES], theta[N_PARTICLES], vx[N_PARTICLES], vy[N_PARTICLES];
     double fs_scale, time;
     //Loop parameters
     unsigned int t, index_p, index_n, i;
@@ -70,7 +74,7 @@ int main(int argc, char **argv) {
     //Parameters for particle particle interaction
     double delta_x, delta_y, temp_fx_n, temp_fy_n, temp_torque_n, r_pn_2;
 
-    const char * restrict fileNameBase = "transient/dummy";
+    const char * restrict fileNameBase = "transient/vtest";
     //const char * restrict fileNameBase = "/home/edvardst/Documents/NTNU/Programming/Project_Assignment/C_plots/Results/Integrators/AB";
     const bool overwrite = false;
     const char * restrict fileName;
@@ -85,7 +89,7 @@ int main(int argc, char **argv) {
 
     //Parameters for loading previos Results
     const char * restrict fileNamePrevious;
-    bool continueFromPrev = true;
+    //bool continueFromPrev = true;
     double D_R;
     double D_R_I;
     ///////////////////////////////////////////////////////////////////
@@ -109,9 +113,13 @@ int main(int argc, char **argv) {
         time = 0;
         D_R = D_R_C;
         sunflower(x, y, N_PARTICLES, 0, R);
-        for (i=0;i<N_PARTICLES;i++) theta[i]=randDouble(-M_PI, M_PI, &r);
+        for (i=0;i<N_PARTICLES;i++){
+            theta[i]=randDouble(-M_PI, M_PI, &r);
+            vx[i] = cos(theta[i]);
+            vy[i] = sin(theta[i]);
+        }
     } else {
-        readInitialState(fileNamePrevious, N_PARTICLES, &time, x, y, theta, &D_R_I);
+        readInitialState(fileNamePrevious, N_PARTICLES, &time, x, y, theta, vx, vy, &D_R_I);
         D_R = D_R_I;
         if (D_R_C != D_R_I){
             printf("D_r was initilized to %.3f, but change to %.3f\n", D_R_C, D_R_I);
@@ -123,21 +131,21 @@ int main(int argc, char **argv) {
     ///////////////////Opening file for results ///////////////////////
     writeSimulationParameters(fileNameBase, R, R_PARTICLE, N_PARTICLES, U_0, D_R, N_STEPS, DT, GAMMA_T, GAMMA_R, LAMBDA_HAR, KAPPA_HAR, GAMMA_PP, R_CUT_OFF_TORQUE_2, LAMBDA_PP, R_CUT_OFF_FORCE, SIGMA_PP);
     openFile(fileName, &fp);
-    for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i], D_R);
+    for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i], vx[i], vy[i], D_R);
     /////////////////////////////////////////////////////////////////
 
 
     fs_scale = 0.0;
     //For each time step
     for (t = 1; t <= N_STEPS; t++){
-        if (t % 1000 ==0 ) printf("%d\n",t);
+        if (t % 10000 ==0 ) printf("%d\n",t);
 
         if (t <= 50000){
             if (!continueFromPrev){
                 fs_scale=0.01+t*0.99/50000.0;
             } else {
                 fs_scale=1.0;
-                D_R = D_R_I*(1+0.01+t*0.99/50000.0);
+                D_R = D_R_I + 0.2*(t/50000.0);
             }
         }
 
@@ -222,19 +230,21 @@ int main(int argc, char **argv) {
             y[index_p] = y[index_p] + (3/2*Y_y[index_p] - 1/2*Y_y_prev[index_p])*DT;
             theta[index_p] = theta[index_p] + (3/2*Y_th[index_p] - 1/2*Y_th_prev[index_p])*DT + sqrt(2*D_R*DT)*randDouble(-a, a, &r);
 
+            vx[i] = 3/2*Y_x[index_p] - 1/2*Y_x_prev[index_p];
+            vy[i] = 3/2*Y_y[index_p] - 1/2*Y_y_prev[index_p];
 
 
         }
         time += DT;
         if (t % 500 ==0){
         //if (t % 100 ==0){
-            for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i], D_R);
+            for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i], vx[i], vy[i], D_R);
         }
         swapPointers(Y_x, Y_x_prev);
         swapPointers(Y_y, Y_y_prev);
         swapPointers(Y_th, Y_th_prev);
     }
-    writeFinalState(fileNameBase, N_PARTICLES, time, x, y, theta, D_R);
+    writeFinalState(fileNameBase, N_PARTICLES, time, x, y, theta, vx, vy, D_R);
 
 
 
@@ -246,6 +256,8 @@ int main(int argc, char **argv) {
     //fclose(fp);
 
     double time_end = walltime();
-    printf("Simulation time: %7.3f ms\n",(time_end-time_start)*1e3);
-    return 0;
+    printf("Simulation time: %7.3f s\n",(time_end-time_start));
+    continueFromPrev=true;
+}
+return 0;
 }

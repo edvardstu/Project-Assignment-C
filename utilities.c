@@ -26,7 +26,7 @@ void setUpRNG(const gsl_rng_type **T, gsl_rng **r){
     gsl_rng_env_setup();
     *T = gsl_rng_default;
     *r = gsl_rng_alloc (*T);
-    //gsl_rng_set(*r, random_seed());
+    gsl_rng_set(*r, random_seed());
     printf ("RNG type: %s\n", gsl_rng_name(*r));
 }
 
@@ -189,7 +189,7 @@ void writeSimulationParameters(const char* restrict fileNameBase, double r, doub
     str_builder_destroy(sb);
 }
 
-void writeFinalState(const char* restrict fileNameBase, int n_particles, double time, double x[], double y[], double theta[], double d_r){
+void writeFinalState(const char* restrict fileNameBase, int n_particles, double time, double x[], double y[], double theta[], double vx[], double vy[], double d_r){
     str_builder_t *sb;
     FILE *fp;
     const char * TXT = ".txt";
@@ -200,7 +200,7 @@ void writeFinalState(const char* restrict fileNameBase, int n_particles, double 
     const char * fileName = str_builder_dump(sb, NULL);
     openFile(fileName, &fp);
 
-    for (int i=0;i<n_particles;i++) fprintf(fp,"%d %lf %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i], d_r);
+    for (int i=0;i<n_particles;i++) fprintf(fp,"%d %lf %lf %lf %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i], vx[i], vy[i], d_r);
 
     closeFile(fileName, &fp);
     str_builder_destroy(sb);
@@ -252,15 +252,15 @@ const char* restrict createFileNamePrevious(const char* restrict fileNameBase, b
     return fileName;
 }
 
-void readInitialState(const char* restrict fileName, int n_particles, double *time, double x[], double y[], double theta[], double *d_r){
+void readInitialState(const char* restrict fileName, int n_particles, double *time, double x[], double y[], double theta[], double vx[], double vy[], double *d_r){
     FILE *fp;
     readFile(fileName, &fp);
     int dummy;
     int status;
     for (int i=0;i<n_particles;i++){
-        status = fscanf(fp,"%d %lf %lf %lf %lf %lf\n", &dummy, time, &x[i], &y[i], &theta[i], d_r);
-        if (status != 6){
-            printf("Line was read incorrectly, number of elements was %d, not 6\n", status);
+        status = fscanf(fp,"%d %lf %lf %lf %lf %lf %lf %lf\n", &dummy, time, &x[i], &y[i], &theta[i], &vx[i], &vy[i], d_r);
+        if (status != 8){
+            printf("Line was read incorrectly, number of elements was %d, not 8\n", status);
         }
     }
     closeFile(fileName, &fp);
