@@ -18,9 +18,9 @@
 #define R_PARTICLE 0.5
 #define N_PARTICLES 1000
 #define U_0 10.0
-#define D_R_C 0.8
+#define D_R_C 0.2
 
-#define N_STEPS 50000//400000//300000
+#define N_STEPS 100000//400000//300000
 #define DT 0.0005 //0.0006
 
 //Diffusive parameters
@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     double time_start = walltime();
 
     bool continueFromPrev = false;
-    for (int k=0; k<2; k++){
+    for (int k=0; k<1; k++){
     printf("Time frame %d of %d\n", k+1, 6);
     //Check the number of particles compared to the size of the system
     double r_particle = (R_CUT_OFF_FORCE-U_0/LAMBDA_PP)/2;
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     //Parameters for particle particle interaction
     double delta_x, delta_y, temp_fx_n, temp_fy_n, temp_torque_n, r_pn_2;
 
-    const char * restrict fileNameBase = "transient/vtest";
+    const char * restrict fileNameBase = "transient/baseline";
     //const char * restrict fileNameBase = "/home/edvardst/Documents/NTNU/Programming/Project_Assignment/C_plots/Results/Integrators/AB";
     const bool overwrite = false;
     const char * restrict fileName;
@@ -115,8 +115,8 @@ int main(int argc, char **argv) {
         sunflower(x, y, N_PARTICLES, 0, R);
         for (i=0;i<N_PARTICLES;i++){
             theta[i]=randDouble(-M_PI, M_PI, &r);
-            vx[i] = cos(theta[i]);
-            vy[i] = sin(theta[i]);
+            vx[i] = U_0*cos(theta[i]);
+            vy[i] = U_0*sin(theta[i]);
         }
     } else {
         readInitialState(fileNamePrevious, N_PARTICLES, &time, x, y, theta, vx, vy, &D_R_I);
@@ -226,12 +226,12 @@ int main(int argc, char **argv) {
             }
 
             //Update particle parameters
-            x[index_p] = x[index_p] + (3/2*Y_x[index_p] - 1/2*Y_x_prev[index_p])*DT;
-            y[index_p] = y[index_p] + (3/2*Y_y[index_p] - 1/2*Y_y_prev[index_p])*DT;
-            theta[index_p] = theta[index_p] + (3/2*Y_th[index_p] - 1/2*Y_th_prev[index_p])*DT + sqrt(2*D_R*DT)*randDouble(-a, a, &r);
+            x[index_p] = x[index_p] + (1.5*Y_x[index_p] - 0.5*Y_x_prev[index_p])*DT;
+            y[index_p] = y[index_p] + (1.5*Y_y[index_p] - 0.5*Y_y_prev[index_p])*DT;
+            theta[index_p] = theta[index_p] + (1.5*Y_th[index_p] - 0.5*Y_th_prev[index_p])*DT + sqrt(2*D_R*DT)*randDouble(-a, a, &r);
 
-            vx[i] = 3/2*Y_x[index_p] - 1/2*Y_x_prev[index_p];
-            vy[i] = 3/2*Y_y[index_p] - 1/2*Y_y_prev[index_p];
+            vx[i] = 1.5*Y_x[index_p] - 0.5*Y_x_prev[index_p];
+            vy[i] = 1.5*Y_y[index_p] - 0.5*Y_y_prev[index_p];
 
 
         }
@@ -240,9 +240,9 @@ int main(int argc, char **argv) {
         //if (t % 100 ==0){
             for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i], vx[i], vy[i], D_R);
         }
-        swapPointers(Y_x, Y_x_prev);
-        swapPointers(Y_y, Y_y_prev);
-        swapPointers(Y_th, Y_th_prev);
+        swapPointers(&Y_x, &Y_x_prev);
+        swapPointers(&Y_y, &Y_y_prev);
+        swapPointers(&Y_th, &Y_th_prev);
     }
     writeFinalState(fileNameBase, N_PARTICLES, time, x, y, theta, vx, vy, D_R);
 

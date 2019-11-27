@@ -172,9 +172,13 @@ void writeSimulationParameters(const char* restrict fileNameBase, double r, doub
     fprintf(fp, "Number of steps: %d\n", n_steps);
     fprintf(fp, "Time step: %.5f\n", dt);
 
+    fprintf(fp, "\nDiffusion\n");
+    fprintf(fp, "Translational diffusion: %.1f\n", gamma_t);
+    fprintf(fp, "Rotational diffusion: %.1f\n", gamma_r);
+
     fprintf(fp, "\nBoundary interaction\n");
-    fprintf(fp, "Lambda harmonic: %.1f\n", gamma_t);
-    fprintf(fp, "Kappa harmonic: %.1f\n", gamma_r);
+    fprintf(fp, "Lambda harmonic: %.1f\n", lambda_har);
+    fprintf(fp, "Kappa harmonic: %.1f\n", kappa_har);
 
     fprintf(fp, "\nParticle-Particle interaction\n");
     fprintf(fp, "Gamma particle-particle: %.1f\n", gamma_pp);
@@ -206,8 +210,8 @@ void writeFinalState(const char* restrict fileNameBase, int n_particles, double 
     str_builder_destroy(sb);
 }
 
-void swapPointers(double *Y_i, double *Y_i_prev){
-    double temp = *Y_i;
+void swapPointers(double **Y_i, double **Y_i_prev){
+    double *temp = *Y_i;
     *Y_i = *Y_i_prev;
     *Y_i_prev = temp;
 }

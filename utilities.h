@@ -31,7 +31,7 @@ void writeSimulationParameters(const char* restrict fileNameBase, double r, doub
 
 void writeFinalState(const char* restrict fileNameBase, int n_particles, double time, double x[], double y[], double theta[], double vx[], double vy[], double d_r);
 
-void swapPointers(double *Y_i, double *Y_i_prev);
+void swapPointers(double **Y_i, double **Y_i_prev);
 
 const char* restrict createFileNamePrevious(const char* restrict fileNameBase, bool overwrite);
 
