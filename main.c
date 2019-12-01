@@ -18,24 +18,24 @@
 #define R_PARTICLE 0.5
 #define N_PARTICLES 1000
 #define U_0 10.0
-#define D_R_C 0.2
+#define D_R_C 5.0
 
-#define N_STEPS 100000//400000//300000
-#define DT 0.0005 //0.0006
+#define N_STEPS 1000000
+#define DT 0.0005
 
 //Diffusive parameters
 #define GAMMA_T 1
 #define GAMMA_R 1
 
 //Boundary interatction
-#define LAMBDA_HAR 200.0//20.0 //FS
+#define LAMBDA_HAR 200.0//200.0 //FS
 #define KAPPA_HAR 10.0  //GS
 
 //Particle particle interaction
 #define GAMMA_PP 10.0//1.0 //GAM
 #define R_CUT_OFF_TORQUE_2 4.0 //9.0
 #define LAMBDA_PP 40.0
-#define R_CUT_OFF_FORCE 2.0  // (R_CUT_OFF_FORCE)^2 > R_CUT_OFF_TORQUE_2
+#define R_CUT_OFF_FORCE 1.0  //
 //#define SIGMA_PP pow(1/2, 1/6)
 //#define SIGMA_PP 1.0 //(SIGMA_PP*2)^2 > R_CUT_OFF_TORQUE_2
 const double SIGMA_PP = 1.5;//sqrt(2.0);//1/sqrt(2);
@@ -44,12 +44,34 @@ const double a = sqrt(3);
 
 
 
+
+
 int main(int argc, char **argv) {
     double time_start = walltime();
+    bool useAB = false;
+
+    double f_AB1 = 1.5;
+    double f_AB2 = 0.5;
+    if (!useAB){
+        f_AB1 = 1.0;
+        f_AB2 = 0.0;
+    }
 
     bool continueFromPrev = false;
-    for (int k=0; k<1; k++){
-    printf("Time frame %d of %d\n", k+1, 6);
+    int numberOfTimeframes = 1;
+    for (int k=0; k<numberOfTimeframes; k++){
+    printf("Timeframe %d of %d\n", k+1, numberOfTimeframes);
+
+
+    /*
+    //For testing solver
+    int FACTOR;
+    double N_STEPS, DT;
+    for (FACTOR = 1; FACTOR < 100000; FACTOR*=10){
+        N_STEPS = 400*FACTOR;
+        DT = 0.01/FACTOR;
+    */
+
     //Check the number of particles compared to the size of the system
     double r_particle = (R_CUT_OFF_FORCE-U_0/LAMBDA_PP)/2;
     printf("The particle radius is %f\n", r_particle);
@@ -74,8 +96,8 @@ int main(int argc, char **argv) {
     //Parameters for particle particle interaction
     double delta_x, delta_y, temp_fx_n, temp_fy_n, temp_torque_n, r_pn_2;
 
-    const char * restrict fileNameBase = "transient/baseline";
-    //const char * restrict fileNameBase = "/home/edvardst/Documents/NTNU/Programming/Project_Assignment/C_plots/Results/Integrators/AB";
+    const char * restrict fileNameBase = "transient/stateIndependency";
+    //const char * restrict fileNameBase = "/home/edvardst/Documents/NTNU/Programming/Project_Assignment/C_plots/Results/Integrators/ABN100";
     const bool overwrite = false;
     const char * restrict fileName;
 
@@ -126,6 +148,8 @@ int main(int argc, char **argv) {
         }
     }
 
+
+
     /////////////////////////////////////////////////////////////////
 
     ///////////////////Opening file for results ///////////////////////
@@ -140,6 +164,7 @@ int main(int argc, char **argv) {
     for (t = 1; t <= N_STEPS; t++){
         if (t % 10000 ==0 ) printf("%d\n",t);
 
+
         if (t <= 50000){
             if (!continueFromPrev){
                 fs_scale=0.01+t*0.99/50000.0;
@@ -148,6 +173,9 @@ int main(int argc, char **argv) {
                 D_R = D_R_I + 0.2*(t/50000.0);
             }
         }
+        //Should not be here, only for solver testing
+        //fs_scale=1.0;
+
 
         double fx_n[N_PARTICLES] = {0};
         double fy_n[N_PARTICLES] = {0};
@@ -188,25 +216,26 @@ int main(int argc, char **argv) {
                     number_n[index_p]++;
 
                 } */
-                if (r_pn_2 < R_CUT_OFF_TORQUE_2){
-                    //if (r_pn_2 < R_CUT_OFF_FORCE*R_CUT_OFF_FORCE){
-                    //if (r_pn_2 < 1.0){
-                    if (r_pn_2 < 2*SIGMA_PP*SIGMA_PP) {
+                if (r_pn_2 < 2*SIGMA_PP*SIGMA_PP) {
+                    if (r_pn_2 < R_CUT_OFF_TORQUE_2){
+                        //if (r_pn_2 < R_CUT_OFF_FORCE*R_CUT_OFF_FORCE){
+                        //if (r_pn_2 < 1.0){
 
-                        //forceHarmonicPP(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y, R_CUT_OFF_FORCE, LAMBDA_PP);
-                        //forceOneOverRQuad(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y);
-                        forceOneOverRQuadSig(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y, SIGMA_PP);
-                        fx_n[index_p] += temp_fx_n;
-                        fy_n[index_p] += temp_fy_n;
-                        fx_n[index_n] -= temp_fx_n;
-                        fy_n[index_n] -= temp_fy_n;
+                        torqueWeeksChandlerAndersen(&temp_torque_n, theta[index_p], theta[index_n], GAMMA_PP, r_pn_2);
+                        torque_n[index_p] += temp_torque_n;
+                        torque_n[index_n] -= temp_torque_n;
+                        number_n[index_n]++;
+                        number_n[index_p]++;
                     }
-                    torqueWeeksChandlerAndersen(&temp_torque_n, theta[index_p], theta[index_n], GAMMA_PP, r_pn_2);
-                    torque_n[index_p] += temp_torque_n;
-                    torque_n[index_n] -= temp_torque_n;
-                    number_n[index_n]++;
-                    number_n[index_p]++;
+                    //forceHarmonicPP(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y, R_CUT_OFF_FORCE, LAMBDA_PP);
+                    //forceOneOverRQuad(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y);
+                    forceOneOverRQuadSig(&temp_fx_n, &temp_fy_n, r_pn_2, delta_x, delta_y, SIGMA_PP);
+                    fx_n[index_p] += temp_fx_n;
+                    fy_n[index_p] += temp_fy_n;
+                    fx_n[index_n] -= temp_fx_n;
+                    fy_n[index_n] -= temp_fy_n;
                 }
+
 
             }
 
@@ -226,21 +255,23 @@ int main(int argc, char **argv) {
             }
 
             //Update particle parameters
-            x[index_p] = x[index_p] + (1.5*Y_x[index_p] - 0.5*Y_x_prev[index_p])*DT;
-            y[index_p] = y[index_p] + (1.5*Y_y[index_p] - 0.5*Y_y_prev[index_p])*DT;
-            theta[index_p] = theta[index_p] + (1.5*Y_th[index_p] - 0.5*Y_th_prev[index_p])*DT + sqrt(2*D_R*DT)*randDouble(-a, a, &r);
+            x[index_p] = x[index_p] + (f_AB1*Y_x[index_p] - f_AB2*Y_x_prev[index_p])*DT;
+            y[index_p] = y[index_p] + (f_AB1*Y_y[index_p] - f_AB2*Y_y_prev[index_p])*DT;
+            theta[index_p] = theta[index_p] + (f_AB1*Y_th[index_p] - f_AB2*Y_th_prev[index_p])*DT + sqrt(2*D_R*DT)*randDouble(-a, a, &r);
 
-            vx[i] = 1.5*Y_x[index_p] - 0.5*Y_x_prev[index_p];
-            vy[i] = 1.5*Y_y[index_p] - 0.5*Y_y_prev[index_p];
+            vx[index_p] = f_AB1*Y_x[index_p] - f_AB2*Y_x_prev[index_p];
+            vy[index_p] = f_AB1*Y_y[index_p] - f_AB2*Y_y_prev[index_p];
 
 
         }
         time += DT;
         if (t % 500 ==0){
-        //if (t % 100 ==0){
+        //if (t%FACTOR == 0){
             for (i=0;i<N_PARTICLES;i++) fprintf(fp,"%d %lf %lf %lf %lf %lf %lf %lf\n", i, time, x[i], y[i], theta[i], vx[i], vy[i], D_R);
         }
+        //printf("Before t: %d, index_p: %d, Y_x: %f, Y_x_prev: %f\n", t, 2, Y_x[2], Y_x_prev[2]);
         swapPointers(&Y_x, &Y_x_prev);
+        //printf("After t: %d, index_p: %d, Y_x: %f, Y_x_prev: %f\n", t, 2, Y_x[2], Y_x_prev[2]);
         swapPointers(&Y_y, &Y_y_prev);
         swapPointers(&Y_th, &Y_th_prev);
     }

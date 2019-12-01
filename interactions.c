@@ -31,8 +31,8 @@ void forceWeeksChandlerAndersen(double *fx_n, double *fy_n, double r_pn_2, doubl
 
 void forceHarmonicPP(double *fx_n, double *fy_n, double r_pn_2, double delta_x, double delta_y, double r_cut_off_force, double lambda_pp){
     double f = -lambda_pp*(sqrt(r_pn_2)-r_cut_off_force);
-    *fx_n = f*delta_x;
-    *fy_n = f*delta_y;
+    *fx_n = f*delta_x/sqrt(r_pn_2);
+    *fy_n = f*delta_y/sqrt(r_pn_2);
 }
 
 void forceOneOverRSquared(double *fx_n, double *fy_n, double r_pn_2, double delta_x, double delta_y, double sigma_pp){
